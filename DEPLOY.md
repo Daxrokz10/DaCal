@@ -68,33 +68,27 @@ sudo chown $USER:$USER /opt/plate
 git clone git@github.com:<you>/plate-platform.git /opt/plate
 cd /opt/plate/server
 
-cp .env.example .env
-openssl rand -hex 32          # copy this
-nano .env                     # paste as PLATE_TOKEN, set PLATE_ORIGINS
+chmod +x setup.sh backup.sh
+./setup.sh --origin https://plate.yourdomain.com
 ```
 
-`PLATE_ORIGINS` must be the exact origin the site is served from, no trailing
-slash — `https://plate.yourdomain.com`. Anything else and the browser blocks
-the request before it is even sent.
+`--origin` must be the exact origin the site is served from, no trailing slash.
+Anything else and the browser blocks every request before it is even sent —
+which looks like the server being down, with nothing in its log.
 
-Check it runs:
+The installer generates a token (keeping any existing one), writes `.env` at
+mode 600, proves the server boots, installs and enables a systemd unit with the
+real paths and your username, verifies that an unauthenticated request gets 401
+and an authenticated one gets 200, and schedules the daily off-machine backup.
+It is idempotent — re-run it whenever you want. It prints the token at the end;
+read it again any time with `grep PLATE_TOKEN /opt/plate/server/.env`.
 
-```bash
-node server.js
-curl localhost:8787/health      # {"ok":true,...}
-```
+The server binds `127.0.0.1` only. Nothing reaches it except through the tunnel.
 
-Then install it as a service so it survives reboots:
-
-```bash
-sed -i "s/REPLACE_WITH_YOUR_USERNAME/$USER/g" plate-sync.service
-sudo cp plate-sync.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now plate-sync
-journalctl -u plate-sync -f
-```
-
-It binds `127.0.0.1` only. Nothing reaches it except through the tunnel.
+**Handing this to an AI agent instead?** Point it at
+[`server/AGENT.md`](server/AGENT.md) — same install, written as a runbook, with
+the values it must ask you for, the things it must not do to your existing
+tunnel, and a verification table it has to report actual output against.
 
 ---
 

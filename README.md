@@ -198,6 +198,8 @@ public/       the app — this is what Cloudflare Pages publishes
   manifest.webmanifest, icon.svg, icon-maskable.svg
 server/       the sync API
   server.js     zero-dependency HTTP server, JSON storage, day-wise merge
+  setup.sh      idempotent Ubuntu installer
+  AGENT.md      the same install written as a runbook for an AI agent
   plate-sync.service, cloudflared-config.example.yml, backup.sh, .env.example
 serve.py      local dev server
 DEPLOY.md     the deployment runbook
