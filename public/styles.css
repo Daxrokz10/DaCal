@@ -433,3 +433,8 @@ svg.chart .hit{fill:transparent; cursor:pointer}
 .syncstate.ok{background:var(--good-dim); color:var(--good); border-color:transparent}
 .syncstate.error{background:var(--over-dim); color:var(--over); border-color:transparent}
 .syncstate.busy{background:var(--accent-dim); color:var(--accent); border-color:transparent}
+
+/* a meal chip carries more weight than a single food */
+.chip.combo{border-color:var(--accent); color:var(--accent); font-weight:600}
+.chip.combo em{color:var(--accent); opacity:.7}
+.chip.combo:hover{background:var(--accent-dim)}

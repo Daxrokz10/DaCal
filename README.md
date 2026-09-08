@@ -163,13 +163,27 @@ the formula and move the target by 150–200 kcal.
 `data.js` — one line per food:
 
 ```js
-["Roti", ["roti","chapati","phulka"], "1 roti", 40, 110, 3, 22, 2]
-//  name    aliases the parser matches   unit    g  kcal  P   C  F
+["Roti", ["roti","chapati","phulka"], "1 medium", 40, 110, 3, 22, 2]
+//  name    aliases the parser matches    unit     g  kcal  P   C  F
 ```
 
 Macros are per serving. `g` is what one serving weighs, which is what lets
-"200 g curd" scale correctly. Add a food and both the parser and the search
-pick it up on reload; add its name to `QUICK` to give it a chip.
+"80 g soya" scale correctly. Add a food and both the parser and the quick
+search pick it up on reload; add its name to `QUICK` to give it a chip.
+
+**Define count-based foods per single piece** — `"1 almond"`, not
+`"5 soaked"`. Otherwise "5 soaked almonds" multiplies a five-piece serving by
+five again.
+
+`COMBOS` groups foods you eat together into one chip:
+
+```js
+{name:"Soya + cheese", note:"your standard protein hit",
+ items:[["Soya chunks",1], ["Cheese cube",1]]}
+```
+
+The calories and protein on the chip are computed from the items, so they
+cannot drift out of step with the library.
 
 `SESSIONS` and `SPLITS` in the same file define the training programmes; add
 an exercise to a session and give it a `MUSCLES` entry so it counts toward

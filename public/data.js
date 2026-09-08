@@ -1,95 +1,118 @@
 /* ---------------------------------------------------------------
    data.js — the food library and the training library.
    Everything here is plain data; edit freely, the app picks it up.
-   Macros are PER SERVING. `g` is the weight of one serving in grams,
-   which is what lets "200 g curd" scale correctly.
+
+   These are Daksh's actual foods at the portions he actually eats,
+   not a generic database. Macros are PER SERVING; `g` is what one
+   serving weighs, which is what lets "200 g curd" scale correctly.
    `a` is the alias list the text parser matches against.
+
+   Where his own reference sheet gave a range, the value here is the
+   midpoint. The wide ones are marked: anything fried, any coconut
+   chutney, any restaurant portion, and any sabzi whose oil you did
+   not measure can be out by a third in either direction. Consistency
+   matters more than accuracy — the same estimate every day still
+   tracks the trend correctly.
 ----------------------------------------------------------------*/
 
 const FOODS = [
-  // name              aliases                                   unit          g     kcal   p     c     f
-  ["Roti",            ["roti","chapati","chapatti","phulka"],    "1 roti",      40,   110,  3,    22,   2],
-  ["Paratha",         ["paratha","parantha"],                    "1 with ghee", 90,   260,  6,    36,   10],
-  ["Rice",            ["rice","chawal","bhaat"],                 "1 katori",    150,  200,  4,    44,   0.5],
-  ["Jeera rice",      ["jeera rice","fried rice"],               "1 katori",    150,  280,  5,    45,   9],
-  ["Biryani",         ["biryani","biriyani"],                    "1 plate",     300,  550,  22,   65,   22],
-  ["Dal",             ["dal","daal","lentils","tadka"],          "1 katori",    150,  150,  9,    20,   4],
-  ["Rajma",           ["rajma","kidney beans"],                  "1 katori",    150,  200,  10,   30,   4],
-  ["Chole",           ["chole","chana","chickpeas","chhole"],    "1 katori",    150,  210,  10,   31,   5],
-  ["Mixed sabzi",     ["sabzi","subzi","vegetables","veg"],      "1 katori",    150,  120,  3,    12,   6],
-  ["Aloo sabzi",      ["aloo","potato sabzi","aloo sabzi"],      "1 katori",    150,  180,  3,    26,   7],
-  ["Palak paneer",    ["palak paneer","saag paneer"],            "1 katori",    150,  280,  13,   9,    21],
-  ["Paneer",          ["paneer","cottage cheese"],               "100 g",       100,  265,  18,   3,    21],
-  ["Tofu",            ["tofu"],                                  "100 g",       100,  144,  16,   3,    8],
-  ["Chicken breast",  ["chicken","chicken breast"],              "100 g",       100,  165,  31,   0,    3.6],
-  ["Chicken curry",   ["chicken curry","butter chicken"],        "1 katori",    150,  300,  22,   8,    20],
-  ["Fish",            ["fish","rohu","salmon","tilapia"],        "100 g",       100,  180,  22,   0,    10],
-  ["Mutton curry",    ["mutton","lamb","gosht"],                 "1 katori",    150,  330,  22,   6,    24],
-  ["Egg",             ["egg","eggs","anda"],                     "1 whole",     50,   78,   6.3,  0.6,  5.3],
-  ["Egg whites",      ["egg white","egg whites","whites"],       "3 whites",    100,  51,   10.8, 0.6,  0],
-  ["Omelette",        ["omelette","omelet","bhurji"],            "2 eggs",      130,  220,  13,   2,    17],
-  ["Whey protein",    ["whey","protein shake","scoop","shake"],  "1 scoop 30 g",30,   120,  24,   2,    1.5],
-  ["Soya chunks",     ["soya","soya chunks","nutrela"],          "50 g dry",    50,   172,  26,   17,   0.5],
-  ["Curd",            ["curd","dahi","yoghurt","yogurt"],        "100 g",       100,  60,   3.5,  4.7,  3.3],
-  ["Greek yoghurt",   ["greek yoghurt","greek yogurt","hung curd"],"100 g",     100,  97,   9,    4,    5],
-  ["Milk",            ["milk","doodh"],                          "250 ml full", 250,  150,  8,    12,   8],
-  ["Toned milk",      ["toned milk","skim milk","low fat milk"], "250 ml",      250,  110,  8,    12,   3.5],
-  ["Buttermilk",      ["buttermilk","chaas","lassi salted"],     "1 glass",     250,  60,   3,    5,    2.5],
-  ["Cheese slice",    ["cheese","cheese slice"],                 "1 slice",     20,   70,   4,    1,    5.5],
-  ["Oats",            ["oats","oatmeal","porridge"],             "50 g dry",    50,   190,  6.5,  33,   3.5],
-  ["Poha",            ["poha"],                                  "1 plate",     200,  250,  5,    45,   6],
-  ["Upma",            ["upma"],                                  "1 plate",     200,  250,  6,    40,   8],
-  ["Idli",            ["idli","idly"],                           "2 pieces",    100,  116,  4,    24,   0.8],
-  ["Dosa",            ["dosa","dose"],                           "1 plain",     120,  170,  4,    30,   4],
-  ["Masala dosa",     ["masala dosa"],                           "1 dosa",      200,  330,  6,    50,   12],
-  ["Vada",            ["vada","medu vada"],                      "1 piece",     50,   150,  3,    17,   8],
-  ["Bread",           ["bread","toast","slice of bread"],        "1 slice",     30,   70,   2.5,  13,   1],
-  ["Brown bread",     ["brown bread","whole wheat bread"],       "1 slice",     30,   75,   3.5,  12,   1.2],
-  ["Banana",          ["banana","kela"],                         "medium",      120,  105,  1.3,  27,   0.4],
-  ["Apple",           ["apple","seb"],                           "medium",      180,  95,   0.5,  25,   0.3],
-  ["Orange",          ["orange","mosambi"],                      "medium",      150,  62,   1.2,  15,   0.2],
-  ["Mango",           ["mango","aam"],                           "medium",      200,  150,  1.4,  38,   0.6],
-  ["Grapes",          ["grapes"],                                "100 g",       100,  69,   0.7,  18,   0.2],
-  ["Dates",           ["dates","khajur"],                        "2 pieces",    24,   66,   0.4,  18,   0],
-  ["Peanut butter",   ["peanut butter","pb"],                    "1 tbsp",      16,   95,   4,    3.5,  8],
-  ["Peanuts",         ["peanuts","moongphali"],                  "30 g",        30,   170,  7.6,  4.8,  14],
-  ["Almonds",         ["almonds","badam"],                       "10 nuts",     12,   70,   2.5,  2.5,  6],
-  ["Walnuts",         ["walnuts","akhrot"],                      "4 halves",    12,   78,   1.8,  1.6, 7.8],
-  ["Ghee",            ["ghee"],                                  "1 tsp",       5,    45,   0,    0,    5],
-  ["Butter",          ["butter","makhan"],                       "1 tsp",       5,    36,   0,    0,    4],
-  ["Cooking oil",     ["oil","cooking oil","refined oil"],       "1 tsp",       5,    40,   0,    0,    4.5],
-  ["Sugar",           ["sugar","cheeni"],                        "1 tsp",       5,    20,   0,    5,    0],
-  ["Honey",           ["honey","shahad"],                        "1 tsp",       7,    21,   0,    5.8,  0],
-  ["Chai",            ["chai","tea","cutting"],                  "1 cup sugar", 150,  90,   2,    11,   4],
-  ["Black coffee",    ["black coffee","coffee no sugar"],        "1 cup",       200,  5,    0.3,  0,    0],
-  ["Latte",           ["latte","cappuccino","coffee"],           "1 regular",   250,  120,  6,    12,   5],
-  ["Cold drink",      ["cold drink","coke","pepsi","soda","soft drink"],"330 ml",330, 139,  0,    35,   0],
-  ["Fruit juice",     ["juice","orange juice","fruit juice"],    "1 glass",     250,  115,  1,    27,   0.3],
-  ["Beer",            ["beer"],                                  "330 ml",      330,  145,  1.5,  11,   0],
-  ["Whisky / vodka",  ["whisky","whiskey","vodka","rum","peg"],  "1 large 60 ml",60,  140,  0,    0,    0],
-  ["Samosa",          ["samosa"],                                "1 piece",     70,   260,  4,    30,   14],
-  ["Pakora",          ["pakora","bhajji","pakoda"],              "4 pieces",    80,   280,  6,    26,   17],
-  ["Pav bhaji",       ["pav bhaji"],                             "1 plate",     300,  520,  11,   62,   25],
-  ["Chole bhature",   ["chole bhature","bhature"],               "1 plate",     350,  700,  17,   80,   34],
-  ["Pizza slice",     ["pizza","pizza slice"],                   "1 slice",     100,  270,  11,   30,   11],
-  ["Burger",          ["burger"],                                "1 regular",   180,  400,  17,   40,   19],
-  ["French fries",    ["fries","french fries"],                  "medium",      110,  340,  4,    43,   17],
-  ["Maggi",           ["maggi","instant noodles","noodles"],     "1 pack",      70,   350,  7,    50,   13],
-  ["Ice cream",       ["ice cream","icecream"],                  "1 scoop",     70,   140,  2.5,  16,   7],
-  ["Gulab jamun",     ["gulab jamun","jamun"],                   "1 piece",     45,   150,  2,    21,   7],
-  ["Dark chocolate",  ["dark chocolate","chocolate"],            "20 g",        20,   120,  1.5,  9,    9],
-  ["Biscuit",         ["biscuit","cookie","parle","marie"],      "2 biscuits",  20,   90,   1.2,  14,   3.5],
-  ["Protein bar",     ["protein bar","bar"],                     "1 bar",       60,   210,  20,   21,   6],
-  ["Salad",           ["salad","green salad","kachumber"],       "1 bowl",      150,  60,   2,    9,    2],
-  ["Sprouts",         ["sprouts","moong sprouts"],               "1 katori",    100,  100,  8,    16,   0.6]
+  // name                    aliases                                          unit             g    kcal   p     c     f
+
+  /* --- rotis and staples --- */
+  ["Roti",                  ["roti","chapati","chapatti","phulka"],           "1 medium",      40,  110,  3,    22,   2],
+  ["Thin roti",             ["thin roti","patli roti","patla roti"],          "1 thin",        28,  72,   2,    14,   1.3],
+  ["Thepla",                ["thepla","theple"],                              "1 medium",      45,  140,  3,    20,   5],
+  ["Pav",                   ["pav","pao","bun"],                              "1 pav",         45,  90,   2.5,  17,   1],
+  ["Bread",                 ["bread","toast","slice of bread"],               "1 slice",       30,  70,   2.5,  13,   1],
+
+  /* --- tea, coffee, dairy --- */
+  ["Chai",                  ["chai","tea","cutting"],                         "1 cup",         150, 100,  2.5,  12,   4],
+  ["Coffee",                ["coffee","normal coffee","doodh coffee"],        "1 cup",         200, 75,   2,    9,    3],
+  ["Black coffee",          ["black coffee","watery coffee","coffee no sugar"],"1 cup",        200, 20,   0.5,  2,    0.5],
+  ["Chaas",                 ["chaas","chhas","buttermilk","matha"],           "1 glass",       250, 60,   3,    5,    2.5],
+  ["Dahi with sugar",       ["dahi","curd","yoghurt","yogurt"],               "1 katori",      150, 150,  5,    18,   5],
+  ["Lassi (malai, dry fruit)",["lassi","malai lassi","sweet lassi"],          "1 glass",       300, 375,  10,   45,   16],
+  ["Cheese cube",           ["cheese cube","cheese","amul cube"],             "1 cube",        20,  57,   3,    1,    4.7],
+  ["Milk",                  ["milk","doodh"],                                 "250 ml",        250, 150,  8,    12,   8],
+
+  /* --- your protein staples --- */
+  ["Soya chunks",           ["soya","soya chunks","nutrela","soya nuggets"],  "80 g dry",      80,  282,  41,   27,   1],
+  ["Whey (Nitra Isolate)",  ["whey","protein","scoop","shake","isolate"],     "1 scoop",       32,  130,  32,   1,    0.5],
+  ["Creatine",              ["creatine","creatin"],                           "1 scoop",       5,   0,    0,    0,    0],
+  ["Paneer sabzi",          ["paneer sabzi","paneer","matar paneer","shahi paneer"],"1 katori", 150, 285,  14,   8,    22],
+  ["Chole",                 ["chole","chola","chana","chickpeas","chhole"],   "1 katori",      150, 260,  11,   33,   9],
+  ["Dal",                   ["dal","daal","lentils","tadka"],                 "1 katori",      150, 150,  9,    20,   4],
+  ["Rajma",                 ["rajma","kidney beans"],                         "1 katori",      150, 200,  10,   30,   4],
+  ["Chicken breast",        ["chicken","chicken breast"],                     "100 g",         100, 165,  31,   0,    3.6],
+  ["Egg",                   ["egg","eggs","anda"],                            "1 whole",       50,  78,   6.3,  0.6,  5.3],
+
+  /* --- carbs --- */
+  ["Rice",                  ["rice","chawal","bhaat"],                        "100 g cooked",  100, 130,  2.7,  28,   0.3],
+  ["Pulao",                 ["pulao","pulav","fried rice","jeera rice"],      "1 plate",       225, 295,  6,    52,   7],
+  ["Poha",                  ["poha"],                                         "1 katori",      150, 215,  4.5,  36,   6],
+  ["Sabzi (mixed)",         ["sabzi","subzi","vegetable sabzi","bhaji sabzi"],"1 katori",      150, 150,  3,    15,   8],
+  ["Fried aloo",            ["fried aloo","aloo","fried potato","aloo fry"],  "100 g",         100, 250,  3,    30,   13],
+  ["Fried kachalu",         ["kachalu","fried kachalu","kachalo"],            "small serving", 80,  140,  2,    20,   6],
+
+  /* --- dosa dinner --- */
+  ["Dosa (plain)",          ["dosa","plain dosa","sada dosa"],                "1 medium",      120, 150,  3.5,  26,   3.5],
+  ["Masala dosa",           ["masala dosa"],                                  "1 homemade",    200, 240,  5,    38,   8],
+  ["Cheese dosa",           ["cheese dosa"],                                  "1 homemade",    180, 215,  6,    30,   8],
+  ["Sambar",                ["sambar","sambhar"],                             "1 katori",      150, 80,   4,    11,   2],
+  ["Coconut chutney",       ["chutney","coconut chutney","nariyal chutney"],  "1 katori",      60,  115,  2,    5,    10],
+
+  /* --- pav bhaji --- */
+  ["Bhaji",                 ["bhaji","pav bhaji bhaji"],                      "1 katori",      200, 275,  5,    30,   15],
+
+  /* --- sandwich --- */
+  ["Veg sandwich",          ["sandwich","veg sandwich","vegetable sandwich"], "1 sandwich",    120, 150,  4,    25,   4],
+
+  /* --- eating out --- */
+  ["Subway chicken 65 bowl",["subway","chicken 65","rice bowl"],              "1 bowl",        400, 650,  34,   70,   25],
+  ["McSpicy burger",        ["mcspicy","mcdonalds","burger"],                 "1 burger",      200, 550,  22,   50,   29],
+  ["Cheesy fries (large)",  ["cheesy fries","fries","french fries"],          "large",         150, 500,  8,    55,   27],
+  ["Coke float",            ["coke float","float","cold drink","coke","pepsi"],"1 regular",    350, 350,  3,    65,   9],
+  ["Mocha latte",           ["mocha","latte","mocha latte","cappuccino"],     "1 regular",     300, 250,  7,    33,   10],
+
+  /* --- the ones that quietly add up --- */
+  ["Bhujia / sev",          ["bhujia","sev","namkeen"],                       "1 katori",      40,  200,  5,    18,   12],
+  ["Ratlami sev (5 rs)",    ["ratlami","ratlami sev"],                        "1 packet",      25,  125,  3,    12,   7.5],
+  ["Balaji moong dal (5 rs)",["moong dal namkeen","balaji","moong dal"],      "1 packet",      25,  125,  5,    13,   6],
+  ["Kurkure (5 rs)",        ["kurkure"],                                      "1 packet",      25,  125,  1.5,  14,   7],
+  ["Bhel",                  ["bhel","bhelpuri","bhel puri"],                  "1 plate",       150, 325,  7,    45,   13],
+  ["Oreo",                  ["oreo"],                                         "1 biscuit",     11,  52,   0.5,  7.5,  2.25],
+  ["Hide & Seek",           ["hide and seek","hide seek","biscuit","cookie"], "1 biscuit",     10.5,50,   0.6,  6.5,  2.4],
+  ["KitKat stick",          ["kitkat","kit kat"],                             "1 stick",       11,  60,   0.7,  7,    3],
+  ["Pulse candy",           ["pulse","candy","pulse candy"],                  "1 candy",       4,   12,   0,    3,    0],
+  /* per piece, not per handful: a serving defined as a count would be
+     multiplied again by the number in "5 soaked almonds" */
+  ["Almonds",               ["almonds","badam"],                              "1 almond",      1.2, 7,    0.26, 0.24, 0.6],
+
+  /* --- basically free --- */
+  ["Onion",                 ["onion","pyaz","kanda"],                         "1 medium",      110, 38,   1,    9,    0.1],
+  ["Boiled beetroot",       ["beetroot","chukandar"],                         "1 serving",     100, 60,   2,    12,   0.2],
+  ["Salad",                 ["salad","kachumber","green salad"],              "1 bowl",        150, 60,   2,    9,    2]
 ].map(a => ({name:a[0], alias:a[1], unit:a[2], g:a[3], kcal:a[4], p:a[5], c:a[6], f:a[7]}));
 
-/* The chips shown on the Today screen — the everyday twenty, in the
-   order you actually reach for them. Everything else is one line of
-   typing away in the parser box. */
-const QUICK = ["Roti","Rice","Dal","Rajma","Chole","Mixed sabzi","Curd","Paneer",
-  "Chicken breast","Egg","Egg whites","Whey protein","Milk","Oats","Banana",
-  "Peanut butter","Ghee","Chai","Bread","Almonds","Samosa","Cold drink"];
+/* The chips on the Today screen — what you actually reach for, in
+   roughly the order of a day. Everything else is one line of typing
+   away in the parser box. */
+const QUICK = ["Roti","Thin roti","Chai","Coffee","Soya chunks","Whey (Nitra Isolate)",
+  "Cheese cube","Creatine","Sabzi (mixed)","Paneer sabzi","Chole","Dal","Rice","Poha",
+  "Dahi with sugar","Chaas","Onion","Salad","Almonds","Bhujia / sev","Pulse candy"];
+
+/* One tap for the combinations you eat as a unit. The soya stack is the
+   whole reason your protein target is reachable on a 1,800 kcal day. */
+const COMBOS = [
+  {name:"Soya + cheese",       note:"your standard protein hit",
+   items:[["Soya chunks",1], ["Cheese cube",1]]},
+  {name:"Soya + cheese + whey", note:"the big one — 76 g protein",
+   items:[["Soya chunks",1], ["Cheese cube",1], ["Whey (Nitra Isolate)",1]]},
+  {name:"Default day",          note:"the whole day, as planned",
+   items:[["Roti",6], ["Chai",1], ["Coffee",1], ["Soya chunks",1],
+          ["Sabzi (mixed)",1], ["Paneer sabzi",1], ["Whey (Nitra Isolate)",1],
+          ["Onion",1], ["Chaas",1], ["Salad",1]]}
+];
 
 /* --------------------------- training --------------------------- */
 

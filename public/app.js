@@ -167,7 +167,8 @@ const WORDNUM = {half:0.5, a:1, an:1, one:1, two:2, three:3, four:4, five:5,
 const FILLER = new Set(["of","the","some","with","and","plus","my","i","ate","had","drank",
   "bowl","bowls","katori","katoris","cup","cups","glass","glasses","plate","plates",
   "piece","pieces","slice","slices","scoop","scoops","tbsp","tsp","spoon","spoons",
-  "small","big","large","medium","full","one","serving","servings","portion"]);
+  "small","big","large","medium","full","one","serving","servings","portion",
+  "soaked","boiled","fried","plain","homemade","normal","katoris","packet","packets"]);
 
 const norm = s => s.toLowerCase().replace(/[^a-z0-9.\s]/g, " ").replace(/\s+/g, " ").trim();
 const singular = w => (w.length > 3 && w.endsWith("s") && !w.endsWith("ss")) ? w.slice(0,-1) : w;
@@ -194,8 +195,16 @@ function matchFood(query){
   return bestScore >= 2 ? {food:best, used:bestKey} : null;
 }
 
+/* "and" separates two foods — except when it is inside one, as in
+   "hide and seek". Collapse those names before splitting on it. */
+const AND_NAMES = INDEX.flatMap(e => e.keys).filter(k => k.includes(" and "));
+
 function parseMeal(text){
-  const phrases = text.split(/,|\band\b|\bwith\b|\+|\n|;/i).map(norm).filter(Boolean);
+  // lowercase only — norm() would strip the commas we are about to split on
+  let cleaned = text.toLowerCase();
+  for(const name of AND_NAMES) cleaned = cleaned.split(name).join(name.replace(/ and /g, " "));
+
+  const phrases = cleaned.split(/,|\band\b|\bwith\b|\+|\n|;/i).map(norm).filter(Boolean);
   const items = [], missed = [];
 
   for(const phrase of phrases){
@@ -946,6 +955,28 @@ function addFood(f){
   else day.items.push({...f});
   save(); renderAll();
 }
+
+/* one tap for a whole combination — the soya stack, the default day */
+const comboHost = el("combos");
+COMBOS.forEach(combo => {
+  const resolved = combo.items
+    .map(([n, q]) => { const f = FOODS.find(x => x.name === n); return f ? {f, q} : null; })
+    .filter(Boolean);
+  const kcal = resolved.reduce((s, {f, q}) => s + f.kcal * q, 0);
+  const prot = resolved.reduce((s, {f, q}) => s + f.p * q, 0);
+
+  const b = document.createElement("button");
+  b.className = "chip combo"; b.type = "button";
+  b.innerHTML = "<span></span><em></em>";
+  b.querySelector("span").textContent = combo.name;
+  b.querySelector("em").textContent = fmt(kcal) + " · " + r0(prot) + "g P";
+  b.title = combo.note + " — " + resolved.map(({f, q}) => (q > 1 ? q + " × " : "") + f.name).join(", ");
+  b.onclick = () => {
+    resolved.forEach(({f, q}) => addFood({name:f.name, unit:f.unit, qty:q,
+                                          kcal:f.kcal, p:f.p, c:f.c, f:f.f}));
+  };
+  comboHost.appendChild(b);
+});
 
 const chipHost = el("chips");
 QUICK.forEach(name => {
