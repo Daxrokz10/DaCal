@@ -209,7 +209,12 @@ public/       the app — this is what Cloudflare Pages publishes
   app.js        state, maths, meal parser, set logging, charts, rendering
   sync.js       offline-first sync against your own server
   sw.js         service worker — offline cache
-  manifest.webmanifest, icon.svg, icon-maskable.svg
+  manifest.webmanifest
+  icon.svg, icon-maskable.svg   source artwork
+  icon-*.png, apple-touch-icon.png
+                rasterised from the SVG — Firefox on Android will not use an
+                SVG for a home-screen icon and falls back to a blank letter
+                tile, so real PNGs have to be in the manifest
 server/       the sync API
   server.js     zero-dependency HTTP server, JSON storage, day-wise merge
   setup.sh      idempotent Ubuntu installer

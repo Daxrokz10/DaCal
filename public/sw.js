@@ -16,7 +16,8 @@
 
 const CACHE = "plate";
 const SHELL = ["./", "index.html", "styles.css", "data.js", "sync.js", "app.js",
-               "manifest.webmanifest", "icon.svg", "icon-maskable.svg"];
+               "manifest.webmanifest", "icon.svg", "icon-maskable.svg",
+               "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png"];
 
 const isFontHost = h => h.endsWith("googleapis.com") || h.endsWith("gstatic.com");
 

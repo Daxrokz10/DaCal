@@ -1,15 +1,17 @@
 {
   "name": "Plate & Platform",
   "short_name": "Plate",
-  "description": "Calorie, macro and training tracker built around a weekly budget.",
+  "description": "Calorie, macro and strength tracker built around a weekly budget.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#EDEFF3",
-  "theme_color": "#EDEFF3",
+  "background_color": "#0A0B0D",
+  "theme_color": "#0A0B0D",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
