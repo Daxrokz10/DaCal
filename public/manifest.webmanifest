@@ -1,0 +1,15 @@
+{
+  "name": "Plate & Platform",
+  "short_name": "Plate",
+  "description": "Calorie, macro and training tracker built around a weekly budget.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDEFF3",
+  "theme_color": "#EDEFF3",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plate &amp; Platform</title>
+<meta name="description" content="Calorie, macro and strength tracker built around a weekly budget and per-set logging.">
+<meta name="theme-color" content="#E9EBEF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A0B0D" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Plate">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="1" y="8" width="3" height="8" rx="1" fill="var(--ink3)"/>
+        <rect x="20" y="8" width="3" height="8" rx="1" fill="var(--ink3)"/>
+        <rect x="5" y="5" width="4" height="14" rx="1" fill="var(--protein)"/>
+        <rect x="15" y="5" width="4" height="14" rx="1" fill="var(--fat)"/>
+        <rect x="9" y="10.5" width="6" height="3" fill="var(--carb)"/>
+      </svg>
+      <h1>Plate &amp; Platform</h1>
+    </div>
+    <div class="datepick">
+      <button id="prevday" title="Previous day" aria-label="Previous day">&#8249;</button>
+      <span class="d" id="dlabel">Today</span>
+      <button id="nextday" title="Next day" aria-label="Next day">&#8250;</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============================ TODAY ============================ -->
+  <section id="v-today" class="stack">
+    <div class="panel">
+      <div class="platestripe"><i></i><i></i><i></i></div>
+      <div class="board">
+        <span class="huge num" id="kcalLeft">0</span>
+        <span class="cap lbl" id="kcalCap">kcal left today</span>
+        <span class="sub" id="kcalSub">0 of 0 eaten</span>
+        <div><span class="verdict" id="verdict">Nothing logged yet</span></div>
+      </div>
+      <div class="rail"><i id="railFill"></i><i id="railSpill" class="spill"></i></div>
+      <div class="macros">
+        <div class="macro m-p">
+          <div class="mrow"><span class="name">Protein</span><span class="vals"><b id="pNow">0</b>/<span id="pTgt">0</span> g</span></div>
+          <div class="bar"><i id="pBar"></i><i id="pSpill" class="spill"></i></div>
+        </div>
+        <div class="macro m-c">
+          <div class="mrow"><span class="name">Carbs</span><span class="vals"><b id="cNow">0</b>/<span id="cTgt">0</span> g</span></div>
+          <div class="bar"><i id="cBar"></i><i id="cSpill" class="spill"></i></div>
+        </div>
+        <div class="macro m-f">
+          <div class="mrow"><span class="name">Fat</span><span class="vals"><b id="fNow">0</b>/<span id="fTgt">0</span> g</span></div>
+          <div class="bar"><i id="fBar"></i><i id="fSpill" class="spill"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hd"><h2>Add food</h2><span class="lbl" id="storeTag">on this device</span></div>
+      <div class="pad">
+        <div class="parse">
+          <textarea id="parseText" rows="2" placeholder="Type the meal — &ldquo;2 rotis, katori of rajma, 200g curd and a chai&rdquo;"></textarea>
+          <button class="btn primary wide" id="parseGo">Read it and add</button>
+          <div id="pending" class="pending" hidden></div>
+        </div>
+        <div class="lbl" style="margin:15px 0 8px">Quick add</div>
+        <div class="chips" id="chips"></div>
+        <details style="margin-top:14px">
+          <summary>Enter it manually</summary>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:11px">
+            <label class="fld"><span>Food</span><input id="mName" placeholder="Chicken biryani, 1 plate"></label>
+            <div class="grid4">
+              <label class="fld"><span>Kcal</span><input id="mK" type="number" inputmode="numeric" placeholder="0"></label>
+              <label class="fld"><span>P g</span><input id="mP" type="number" inputmode="numeric" placeholder="0"></label>
+              <label class="fld"><span>C g</span><input id="mC" type="number" inputmode="numeric" placeholder="0"></label>
+              <label class="fld"><span>F g</span><input id="mF" type="number" inputmode="numeric" placeholder="0"></label>
+            </div>
+            <button class="btn wide" id="mAdd">Add to log</button>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hd"><h2>The log</h2><span class="lbl" id="logCount"></span></div>
+      <div id="log"></div>
+    </div>
+
+    <div class="panel pad">
+      <div class="row">
+        <label class="fld" style="flex:1"><span>Morning weight (kg)</span><input id="wIn" type="number" step="0.1" inputmode="decimal" placeholder="&mdash;"></label>
+        <div style="text-align:right; flex:none"><span class="num" id="wTrend" style="font-size:30px">&mdash;</span><span class="lbl" style="display:block; margin-top:4px">7-day avg</span></div>
+      </div>
+      <p class="note" style="margin:11px 0 0" id="wNote">Weigh in first thing, after the bathroom, before food. The weekly average is the signal; a single morning is noise.</p>
+    </div>
+  </section>
+
+  <!-- ============================ WEEK ============================= -->
+  <section id="v-week" class="stack" hidden>
+    <div class="panel">
+      <div class="platestripe"><i></i><i></i><i></i></div>
+      <div class="pad">
+        <div class="lbl" id="weekRange">This week</div>
+        <div class="bank" style="margin-top:9px">
+          <div><span class="num big" id="bankNum">0</span><span class="lbl" style="display:block; margin-top:5px" id="bankLbl">kcal left this week</span></div>
+          <p class="lede" id="bankLede"></p>
+        </div>
+        <div style="margin-top:15px">
+          <div class="bar" style="height:10px"><i id="wkBar"></i><i id="wkSpill" class="spill"></i></div>
+          <div class="row" style="margin-top:7px; font-size:12px; color:var(--ink3); font-variant-numeric:tabular-nums">
+            <span id="wkEaten">0 eaten</span><span id="wkBudget">0 budget</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hd"><h2>Daily intake</h2><span class="lbl">vs target</span></div>
+      <div class="pad">
+        <div class="weekchart" id="weekchart"></div>
+        <div class="legend">
+          <span><i style="background:var(--accent)"></i>On or under</span>
+          <span><i style="background:var(--over)"></i>Over</span>
+          <span><i style="background:var(--grid)"></i>Not logged</span>
+          <span>&ndash;&ndash; target</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hd"><h2>The maths</h2></div>
+      <div class="pad">
+        <table class="dl" id="mathTable"></table>
+        <p class="note" style="margin-top:12px" id="weekAdvice"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= GYM ============================= -->
+  <section id="v-gym" class="stack" hidden>
+    <div class="seg" id="gymSeg">
+      <button data-sub="session" aria-pressed="true">Session</button>
+      <button data-sub="progress" aria-pressed="false">Progress</button>
+    </div>
+
+    <!-- ---------- session ---------- -->
+    <div id="g-session" style="display:flex; flex-direction:column; gap:10px">
+      <div class="panel">
+        <div class="platestripe"><i></i><i></i><i></i></div>
+        <div class="sesbar">
+          <div class="badge"><span class="d" id="sesBadgeDay">MON</span><span class="n" id="sesBadgeN">&mdash;</span></div>
+          <div style="flex:1; min-width:0">
+            <h2 id="sesName">&mdash;</h2>
+            <p id="sesFocus">&mdash;</p>
+          </div>
+        </div>
+        <div class="stats">
+          <div><span class="k num" id="sesSets">0<small id="sesSetsOf">/0</small></span><span class="l lbl">Sets done</span></div>
+          <div><span class="k num" id="sesTon">0<small>kg</small></span><span class="l lbl">Tonnage</span></div>
+          <div><span class="k num" id="sesBurn">0</span><span class="l lbl">Kcal burn</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="hd"><h2>Today&rsquo;s work</h2><span class="lbl" id="sesDay"></span></div>
+        <div id="exlist"></div>
+      </div>
+
+      <div class="panel pad">
+        <div class="cue" id="cue"></div>
+        <p class="note" style="margin:12px 0 0" id="fuel"></p>
+      </div>
+
+      <div class="panel">
+        <div class="hd"><h2>The week</h2><span class="lbl" id="streak"></span></div>
+        <div class="pad"><table class="dl" id="splitTable"></table></div>
+      </div>
+    </div>
+
+    <!-- ---------- progress ---------- -->
+    <div id="g-progress" style="display:flex; flex-direction:column; gap:10px" hidden>
+      <div class="panel">
+        <div class="hd"><h2>Strength</h2><span class="lbl">est. 1RM</span></div>
+        <div class="pad" style="padding-bottom:6px">
+          <div class="chips" id="liftChips"></div>
+        </div>
+        <div class="chartwrap">
+          <div class="readout" id="liftReadout"></div>
+          <svg class="chart" id="liftChart" viewBox="0 0 320 158" role="img" aria-label="Estimated one-rep max over time"></svg>
+          <p class="note" style="margin:8px 0 0" id="liftNote"></p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="hd"><h2>Weekly volume</h2><span class="lbl">hard sets</span></div>
+        <div class="pad">
+          <div id="volList"></div>
+          <div class="legend">
+            <span><i style="background:var(--grid); border:1px solid var(--line2)"></i>the 10&ndash;20 set range</span>
+            <button class="tablebtn" id="volTableBtn">Show as table</button>
+          </div>
+          <div class="datatable" id="volTable" hidden></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="hd"><h2>What you trained</h2><span class="lbl">this week</span></div>
+        <div class="pad">
+          <div class="heat" id="heat"></div>
+          <div class="heatscale">
+            <span>0 sets</span>
+            <span class="sw"><i style="background:var(--heat0); box-shadow:inset 0 0 0 1px var(--line2)"></i><i style="background:var(--heat1)"></i><i style="background:var(--heat2)"></i><i style="background:var(--heat3)"></i><i style="background:var(--heat4)"></i></span>
+            <span>20+</span>
+          </div>
+          <p class="note" style="margin:11px 0 0" id="heatNote"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= YOU ============================= -->
+  <section id="v-you" class="stack" hidden>
+    <div class="panel">
+      <div class="hd"><h2>Your numbers</h2><span class="lbl">edit anything</span></div>
+      <div class="pad">
+        <div style="display:flex; flex-direction:column; gap:13px">
+          <div>
+            <span class="lbl" style="display:block; margin-bottom:6px">Sex (for the BMR formula)</span>
+            <div class="seg" id="segSex"><button data-v="m">Male</button><button data-v="f">Female</button></div>
+          </div>
+          <div class="grid2">
+            <label class="fld"><span>Age</span><input id="pAge" type="number" inputmode="numeric"></label>
+            <label class="fld"><span>Height (cm)</span><input id="pHt" type="number" inputmode="numeric"></label>
+          </div>
+          <label class="fld"><span>Weight (kg)</span><input id="pWt" type="number" step="0.1" inputmode="decimal"></label>
+          <label class="fld"><span>Daily activity outside the gym</span>
+            <select id="pAct">
+              <option value="1.2">Desk-bound, barely walk</option>
+              <option value="1.375">Light &mdash; some walking</option>
+              <option value="1.55">Moderate &mdash; on my feet a fair bit</option>
+              <option value="1.725">High &mdash; physical job, lots of steps</option>
+            </select>
+          </label>
+          <label class="fld"><span>Goal</span>
+            <select id="pGoal">
+              <option value="cut">Lose fat &mdash; steady (0.5 kg/wk)</option>
+              <option value="lean">Lose fat &mdash; gentle (0.25 kg/wk)</option>
+              <option value="maintain">Hold this weight</option>
+              <option value="gain">Lean gain (0.25 kg/wk)</option>
+            </select>
+          </label>
+          <label class="fld"><span>Training split</span>
+            <select id="pSplit">
+              <option value="mine">My split &mdash; 6 days</option>
+              <option value="ul">Upper / Lower &mdash; 4 days</option>
+              <option value="ppl">Push / Pull / Legs &mdash; 6 days</option>
+              <option value="fb">Full body &mdash; 3 days</option>
+              <option value="bro">Body part split &mdash; 5 days</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hd"><h2>What that gives you</h2></div>
+      <div class="pad">
+        <table class="dl" id="calcTable"></table>
+        <p class="note" style="margin-top:12px" id="calcNote"></p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hd"><h2>Sync</h2><span class="lbl">across your devices</span></div>
+      <div class="pad">
+        <p class="note">Your log is written to this browser first and always works offline. If you point it at your own sync server, the phone and the laptop reconcile in the background &mdash; whichever device changed a day most recently wins for that day.</p>
+        <div class="syncstate off" id="syncState" style="margin-top:11px">Not set up &mdash; this device only.</div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px">
+          <label class="fld"><span>Server address</span><input id="syncUrl" placeholder="https://plate-api.yourdomain.com" autocomplete="off" spellcheck="false"></label>
+          <label class="fld"><span>Token</span><input id="syncToken" type="password" placeholder="the long secret from the server" autocomplete="off"></label>
+          <div class="grid2">
+            <button class="btn" id="syncTest">Test connection</button>
+            <button class="btn primary" id="syncSave">Save &amp; sync</button>
+          </div>
+          <div class="grid2">
+            <button class="btn" id="syncNow">Sync now</button>
+            <button class="btn" id="syncForget">Stop syncing</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="hd"><h2>Your data</h2></div>
+      <div class="pad">
+        <p class="note">A copy always lives in this browser, so the app works with no signal and with the laptop asleep. Export writes the whole log to a JSON file &mdash; worth doing before you switch phones or clear your browser, whether or not sync is on.</p>
+        <div class="grid2" style="margin-top:12px">
+          <button class="btn" id="exportBtn">Export</button>
+          <button class="btn" id="importBtn">Import</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json" hidden>
+        <button class="btn wide" id="resetBtn" style="margin-top:9px">Clear all logged days</button>
+        <p class="note" style="margin:12px 0 0" id="verNote"></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabs">
+  <div class="wrap">
+    <button data-tab="today" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 4v8l5 3"></path></svg>Today</button>
+    <button data-tab="week" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M9.3 19V5M14.7 19v-8M20 19v-5"></path></svg>Week</button>
+    <button data-tab="gym" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"></path></svg>Gym</button>
+    <button data-tab="you" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 20c1-3.6 3.8-5.4 7.2-5.4s6.2 1.8 7.2 5.4"></path></svg>You</button>
+  </div>
+</nav>
+
+
+<!-- ====================== swap / add sheet ====================== -->
+<div id="sheet" class="sheet" hidden>
+  <div class="sheetbg" id="sheetBg"></div>
+  <div class="sheetbox" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheethd">
+      <div style="min-width:0">
+        <span class="lbl" id="sheetKicker">Swap</span>
+        <h2 id="sheetTitle">&mdash;</h2>
+      </div>
+      <button class="sheetx" id="sheetClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheetbody">
+      <div class="seg" id="scopeSeg">
+        <button data-scope="today" aria-pressed="true">Just today</button>
+        <button data-scope="plan" aria-pressed="false">Change my programme</button>
+      </div>
+      <p class="sheetnote" id="scopeNote"></p>
+      <input id="exSearch" placeholder="Search exercises" autocomplete="off">
+      <div class="exopts" id="exOpts"></div>
+      <details id="customBox">
+        <summary>Add one that isn&rsquo;t listed</summary>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:11px">
+          <label class="fld"><span>Name</span><input id="cxName" placeholder="The angled row machine"></label>
+          <div class="grid2">
+            <label class="fld"><span>Mainly works</span><select id="cxMuscle"></select></label>
+            <label class="fld"><span>Sets &times; reps</span><input id="cxScheme" placeholder="3 x 10-12"></label>
+          </div>
+          <button class="btn wide" id="cxAdd">Save and use it</button>
+        </div>
+      </details>
+      <button class="btn wide" id="sheetRemove">Remove from this session</button>
+      <button class="btn wide" id="sheetReset" hidden>Reset this session to default</button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="sync.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

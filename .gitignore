@@ -1,0 +1,8 @@
+# runtime data — never commit the log or the secret
+server/data/
+server/.env
+*.log
+
+# local scratch
+_preview.html
+.DS_Store
