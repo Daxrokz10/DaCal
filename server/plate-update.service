@@ -1,0 +1,8 @@
+[Unit]
+Description=Pull and deploy Plate & Platform server updates
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=REPLACE_DIR/update.sh

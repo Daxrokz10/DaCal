@@ -232,16 +232,31 @@ Rotating the token: change `PLATE_TOKEN` in `.env`,
 ## Updating
 
 ```bash
-git push                       # site redeploys itself
+git push
 ```
 
-Server changes need a pull on the laptop:
+That is the whole procedure. Both halves follow on their own:
+
+**Frontend** — Cloudflare builds and deploys within a minute. Installed phones
+pick it up by themselves: the service worker serves from cache instantly and
+re-fetches in the background, so a deploy lands at most one launch late with no
+version number to bump. (An earlier version was cache-first and did need a
+manual `CACHE` bump; it does not any more.)
+
+**Backend** — `plate-update.timer` checks for new commits every 15 minutes,
+fast-forwards, restarts `plate-sync`, and health-checks it. If the new code
+fails to answer, it resets to the previous commit and restarts that, so a bad
+push cannot leave the sync server down. Watch it with:
 
 ```bash
-cd /opt/plate && git pull && sudo systemctl restart plate-sync
+systemctl list-timers plate-update
+journalctl -u plate-update -n 30 --no-pager
 ```
 
-One gotcha: after changing anything in `public/`, bump `CACHE` in
-`public/sw.js` (`plate-v3` → `plate-v4`). The service worker is cache-first,
-so without that bump an installed phone keeps showing the old version. It does
-not register on localhost, so local development is unaffected.
+It stays silent when there is nothing new. To update by hand instead, install
+with `./setup.sh --origin ... --no-auto-update` and use
+`cd /opt/plate && git pull && sudo systemctl restart plate-sync`.
+
+Two things the timer will not do, by design: it only fast-forwards (local
+commits on the server stop it rather than being merged over), and it never
+touches `data/` or `.env`.

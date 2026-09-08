@@ -199,6 +199,7 @@ public/       the app — this is what Cloudflare Pages publishes
 server/       the sync API
   server.js     zero-dependency HTTP server, JSON storage, day-wise merge
   setup.sh      idempotent Ubuntu installer
+  update.sh     pull, restart, health-check, roll back on failure
   AGENT.md      the same install written as a runbook for an AI agent
   plate-sync.service, cloudflared-config.example.yml, backup.sh, .env.example
 serve.py      local dev server

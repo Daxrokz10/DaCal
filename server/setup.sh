@@ -12,14 +12,16 @@ set -euo pipefail
 ORIGIN=""
 PORT="8787"
 HOST="127.0.0.1"
+AUTO_UPDATE="yes"
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --origin) ORIGIN="${2:-}"; shift 2 ;;
     --port)   PORT="${2:-}";   shift 2 ;;
     --host)   HOST="${2:-}";   shift 2 ;;
+    --no-auto-update) AUTO_UPDATE="no"; shift ;;
     -h|--help)
-      echo "usage: ./setup.sh --origin https://plate.daksh.site [--port 8787]"
+      echo "usage: ./setup.sh --origin https://plate.daksh.site [--port 8787] [--no-auto-update]"
       exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
@@ -35,7 +37,7 @@ say()  { printf '\n\033[1m%s\033[0m\n' "$*"; }
 fail() { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
 
 # ---------------------------------------------------------------- checks
-say "1/6  Checking prerequisites"
+say "1/7  Checking prerequisites"
 
 [ "$(id -u)" -ne 0 ] || fail "Run this as your normal user, not root. It calls sudo where it needs to."
 
@@ -58,7 +60,7 @@ case "$ORIGIN" in */) fail "--origin must not end in a slash." ;; esac
 echo "  origin: $ORIGIN"
 
 # ---------------------------------------------------------------- token
-say "2/6  Token"
+say "2/7  Token"
 mkdir -p "$DATA"
 
 if [ -f "$ENV_FILE" ] && grep -qE '^PLATE_TOKEN=.{32,}$' "$ENV_FILE"; then
@@ -83,7 +85,7 @@ chmod 600 "$ENV_FILE"
 echo "  wrote $ENV_FILE (mode 600)"
 
 # ---------------------------------------------------------------- smoke test
-say "3/6  Starting it once to check it runs"
+say "3/7  Starting it once to check it runs"
 set +e
 ( set -a; . "$ENV_FILE"; set +a; exec node "$DIR/server.js" ) &
 SMOKE_PID=$!
@@ -97,7 +99,7 @@ set -e
 echo "  health: $HEALTH"
 
 # ---------------------------------------------------------------- service
-say "4/6  Installing the systemd service"
+say "4/7  Installing the systemd service"
 # ProtectHome=read-only makes /home unwritable to the service. ReadWritePaths
 # does punch back through it, but there is no reason to lean on that subtlety
 # when the install lives under /home — so only harden /home when we are not in it.
@@ -143,7 +145,7 @@ systemctl is-active --quiet plate-sync || {
 echo "  plate-sync is active and enabled at boot"
 
 # ---------------------------------------------------------------- verify
-say "5/6  Verifying through the service"
+say "5/7  Verifying through the service"
 curl -fsS --max-time 5 "http://$HOST:$PORT/health" >/dev/null || fail "Service is up but /health does not answer."
 UNAUTH="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://$HOST:$PORT/state")"
 [ "$UNAUTH" = "401" ] || fail "Expected 401 without a token, got $UNAUTH — auth is not working, stop and investigate."
@@ -151,8 +153,22 @@ AUTH="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 -H "Authorization: B
 [ "$AUTH" = "200" ] || fail "Expected 200 with the token, got $AUTH."
 echo "  health ok, no token rejected (401), correct token accepted (200)"
 
+# ---------------------------------------------------------------- auto update
+say "6/7  Automatic updates"
+if [ "$AUTO_UPDATE" = "yes" ]; then
+  chmod +x "$DIR/update.sh"
+  sed "s|REPLACE_DIR|$DIR|" "$DIR/plate-update.service" | sudo tee /etc/systemd/system/plate-update.service >/dev/null
+  sudo cp "$DIR/plate-update.timer" /etc/systemd/system/plate-update.timer
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now plate-update.timer
+  echo "  checking for new commits every 15 minutes; rolls back if a pull breaks health"
+else
+  sudo systemctl disable --now plate-update.timer 2>/dev/null || true
+  echo "  skipped (--no-auto-update); update by hand with git pull && systemctl restart plate-sync"
+fi
+
 # ---------------------------------------------------------------- backups
-say "6/6  Off-machine backup"
+say "7/7  Off-machine backup"
 if crontab -l 2>/dev/null | grep -q 'plate/server/backup.sh\|/backup.sh'; then
   echo "  a backup cron entry already exists, leaving it alone"
 else
@@ -183,5 +199,6 @@ Your token (enter it under You -> Sync on each device):
 
 Read it again later with:  grep PLATE_TOKEN $ENV_FILE
 Follow the log with:       journalctl -u plate-sync -f
+Update checks:             systemctl list-timers plate-update
 ------------------------------------------------------------------
 EOF
