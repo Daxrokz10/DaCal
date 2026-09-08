@@ -78,9 +78,12 @@ If `/opt/plate` already contains the repo, `git pull` instead of cloning.
 ### 2. Run the installer
 
 ```bash
-chmod +x setup.sh backup.sh
 ./setup.sh --origin https://plate.daksh.site
 ```
+
+The scripts are committed executable, so do **not** `chmod +x` them. Doing so
+changes the file mode git tracks, which registers as a local modification and
+blocks the next `git pull` — including the automatic one.
 
 It is idempotent — re-running is safe and is the right response to most
 failures once you have fixed the cause. It will:

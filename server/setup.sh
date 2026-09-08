@@ -86,17 +86,27 @@ echo "  wrote $ENV_FILE (mode 600)"
 
 # ---------------------------------------------------------------- smoke test
 say "3/7  Starting it once to check it runs"
-set +e
-( set -a; . "$ENV_FILE"; set +a; exec node "$DIR/server.js" ) &
-SMOKE_PID=$!
-sleep 2
-HEALTH="$(curl -fsS --max-time 5 "http://$HOST:$PORT/health" 2>/dev/null)"
-RC=$?
-kill "$SMOKE_PID" 2>/dev/null
-wait "$SMOKE_PID" 2>/dev/null
-set -e
-[ $RC -eq 0 ] || fail "The server did not answer on http://$HOST:$PORT/health. Run 'node server.js' here and read the error."
-echo "  health: $HEALTH"
+if systemctl is-active --quiet plate-sync 2>/dev/null; then
+  # Re-run on a live install. Starting a second copy would only collide with
+  # the running one on the port, print an alarming stack trace, and prove
+  # nothing — the service is restarted and verified properly in steps 4 and 5.
+  echo "  already running as a service; skipping the standalone start"
+else
+  set +e
+  ( set -a; . "$ENV_FILE"; set +a; exec node "$DIR/server.js" ) >/tmp/plate-smoke.log 2>&1 &
+  SMOKE_PID=$!
+  sleep 2
+  HEALTH="$(curl -fsS --max-time 5 "http://$HOST:$PORT/health" 2>/dev/null)"
+  RC=$?
+  kill "$SMOKE_PID" 2>/dev/null
+  wait "$SMOKE_PID" 2>/dev/null
+  set -e
+  if [ $RC -ne 0 ]; then
+    sed 's/^/    /' /tmp/plate-smoke.log
+    fail "The server did not answer on http://$HOST:$PORT/health — its output is above."
+  fi
+  echo "  health: $HEALTH"
+fi
 
 # ---------------------------------------------------------------- service
 say "4/7  Installing the systemd service"

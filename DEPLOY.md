@@ -68,7 +68,6 @@ sudo chown $USER:$USER /opt/plate
 git clone git@github.com:<you>/plate-platform.git /opt/plate
 cd /opt/plate/server
 
-chmod +x setup.sh backup.sh
 ./setup.sh --origin https://plate.daksh.site
 ```
 
