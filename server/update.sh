@@ -21,6 +21,7 @@ HEALTH="http://${PLATE_HOST:-127.0.0.1}:${PLATE_PORT:-8787}/health"
 # the repo belongs to the service user; root touching it needs this
 OWNER="$(stat -c '%U' "$REPO")"
 git config --global --add safe.directory "$REPO" 2>/dev/null || true
+git -C "$REPO" config core.fileMode false 2>/dev/null || true
 
 cd "$REPO"
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"

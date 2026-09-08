@@ -59,6 +59,13 @@ esac
 case "$ORIGIN" in */) fail "--origin must not end in a slash." ;; esac
 echo "  origin: $ORIGIN"
 
+# A deployment clone should not care that a file's permission bits differ from
+# what was committed — a stray chmod would otherwise look like a local change
+# and block every future pull, including the automatic one.
+if [ -d "$DIR/../.git" ]; then
+  git -C "$DIR/.." config core.fileMode false 2>/dev/null || true
+fi
+
 # ---------------------------------------------------------------- token
 say "2/7  Token"
 mkdir -p "$DATA"
