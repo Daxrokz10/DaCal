@@ -103,8 +103,13 @@ The installer deliberately does not touch cloudflared.
 
 ```bash
 command -v cloudflared && cloudflared tunnel list
-ls -l ~/.cloudflared/config.yml /etc/cloudflared/config.yml 2>/dev/null
+ls -l /etc/cloudflared/config.yml ~/.cloudflared/config.yml 2>/dev/null
 ```
+
+`cloudflared service install` runs the daemon as **root**, which reads
+`/etc/cloudflared/config.yml` and ignores the home-directory copy. After a
+service install, that is the only file that matters — delete the home copy
+rather than leaving two configs that disagree.
 
 *No cloudflared, or no tunnels* — this is a first-time install. Do this, and
 nothing in the "back up the config" advice below applies yet:

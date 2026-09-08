@@ -1,4 +1,9 @@
-# ~/.cloudflared/config.yml  (or /etc/cloudflared/config.yml)
+# /etc/cloudflared/config.yml
+#
+# NOTE: `cloudflared service install` runs the daemon as root, and root reads
+# /etc/cloudflared/config.yml — NOT ~/.cloudflared/config.yml. Editing the one
+# in your home directory and restarting will appear to do nothing at all.
+# After a service install, delete the home copy so there is only one truth.
 #
 # You already run a tunnel for Jellyfin. If you want to reuse that tunnel,
 # just add the plate-api hostname to its ingress list — the entries are

@@ -128,9 +128,13 @@ sudo cloudflared service install
 sudo systemctl enable --now cloudflared
 ```
 
-If you already have one, back the config up first
-(`cp config.yml config.yml.bak-$(date +%F)`) and add to `ingress` **above**
-the `http_status:404` catch-all:
+**The config lives at `/etc/cloudflared/config.yml`** once installed as a
+service — the daemon runs as root and ignores `~/.cloudflared/config.yml`.
+Edit the wrong one and a restart silently changes nothing.
+
+If you already have a tunnel, back the config up first
+(`sudo cp /etc/cloudflared/config.yml{,.bak-$(date +%F)}`) and add to `ingress`
+**above** the `http_status:404` catch-all:
 
 ```yaml
   - hostname: plate-api.daksh.site
