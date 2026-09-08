@@ -98,6 +98,14 @@ echo "  health: $HEALTH"
 
 # ---------------------------------------------------------------- service
 say "4/6  Installing the systemd service"
+# ProtectHome=read-only makes /home unwritable to the service. ReadWritePaths
+# does punch back through it, but there is no reason to lean on that subtlety
+# when the install lives under /home — so only harden /home when we are not in it.
+case "$DATA" in
+  /home/*|/root/*) PROTECT_HOME="" ;;
+  *)               PROTECT_HOME="ProtectHome=read-only" ;;
+esac
+
 sudo tee "$UNIT" >/dev/null <<EOF
 [Unit]
 Description=Plate & Platform sync server
@@ -117,7 +125,7 @@ RestartSec=3
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ProtectHome=read-only
+$PROTECT_HOME
 ReadWritePaths=$DATA
 
 [Install]
