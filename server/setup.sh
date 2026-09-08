@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install the Plate & Platform sync server on Ubuntu.
 #
-#   ./setup.sh --origin https://plate.yourdomain.com
+#   ./setup.sh --origin https://plate.daksh.site
 #
 # Idempotent: safe to run again after a git pull, on a half-finished install,
 # or to change the origin. It never regenerates an existing token, and never
@@ -19,7 +19,7 @@ while [ $# -gt 0 ]; do
     --port)   PORT="${2:-}";   shift 2 ;;
     --host)   HOST="${2:-}";   shift 2 ;;
     -h|--help)
-      echo "usage: ./setup.sh --origin https://plate.yourdomain.com [--port 8787]"
+      echo "usage: ./setup.sh --origin https://plate.daksh.site [--port 8787]"
       exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
@@ -49,10 +49,10 @@ echo "  node $(node --version), openssl present, systemd present"
 if [ -z "$ORIGIN" ] && [ -f "$ENV_FILE" ]; then
   ORIGIN="$(grep -E '^PLATE_ORIGINS=' "$ENV_FILE" | cut -d= -f2- || true)"
 fi
-[ -n "$ORIGIN" ] || fail "Pass --origin https://plate.yourdomain.com (the exact address the site is served from)."
+[ -n "$ORIGIN" ] || fail "Pass --origin https://plate.daksh.site (the exact address the site is served from)."
 case "$ORIGIN" in
   https://*|http://localhost:*|http://127.0.0.1:*) ;;
-  *) fail "--origin must be a full origin like https://plate.yourdomain.com" ;;
+  *) fail "--origin must be a full origin like https://plate.daksh.site" ;;
 esac
 case "$ORIGIN" in */) fail "--origin must not end in a slash." ;; esac
 echo "  origin: $ORIGIN"
@@ -161,13 +161,13 @@ so nothing reaches it until you route a tunnel hostname to it.
 REMAINING MANUAL STEP — add to the ingress list in your cloudflared
 config, ABOVE the http_status:404 catch-all:
 
-  - hostname: plate-api.yourdomain.com
+  - hostname: plate-api.daksh.site
     service: http://$HOST:$PORT
 
 then:
-  cloudflared tunnel route dns <tunnel-name> plate-api.yourdomain.com
+  cloudflared tunnel route dns <tunnel-name> plate-api.daksh.site
   sudo systemctl restart cloudflared
-  curl https://plate-api.yourdomain.com/health
+  curl https://plate-api.daksh.site/health
 
 Your token (enter it under You -> Sync on each device):
 

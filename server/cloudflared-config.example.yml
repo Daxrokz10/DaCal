@@ -8,11 +8,11 @@ tunnel: <your-tunnel-uuid>
 credentials-file: /home/<you>/.cloudflared/<your-tunnel-uuid>.json
 
 ingress:
-  - hostname: plate-api.yourdomain.com
+  - hostname: plate-api.daksh.site
     service: http://127.0.0.1:8787
 
   # your existing entries, e.g.
-  # - hostname: jellyfin.yourdomain.com
+  # - hostname: jelly.daksh.site
   #   service: http://127.0.0.1:8096
 
   - service: http_status:404

@@ -52,7 +52,7 @@ Save and deploy. That is the continuous deployment done: every push to `main`
 builds and goes live in under a minute, and pull requests get their own preview
 URL. Rollback is one click in the Deployments tab.
 
-Then **Custom domains** → add `plate.yourdomain.com`. Your domain is already on
+Then **Custom domains** → add `plate.daksh.site`. Your domain is already on
 Cloudflare for Jellyfin, so the DNS record is created for you and the
 certificate issues in a minute or two.
 
@@ -69,7 +69,7 @@ git clone git@github.com:<you>/plate-platform.git /opt/plate
 cd /opt/plate/server
 
 chmod +x setup.sh backup.sh
-./setup.sh --origin https://plate.yourdomain.com
+./setup.sh --origin https://plate.daksh.site
 ```
 
 `--origin` must be the exact origin the site is served from, no trailing slash.
@@ -92,23 +92,57 @@ tunnel, and a verification table it has to report actual output against.
 
 ---
 
-## 4. Expose it through your tunnel
+## 4. Expose it through a tunnel
 
-You already run `cloudflared` for Jellyfin, so add a hostname to that tunnel
-rather than making a second one. In `~/.cloudflared/config.yml`, add to
-`ingress` **above** the `http_status:404` catch-all:
+**Your connection is IPv6-only, and that is fine — arguably it is the reason
+to use a tunnel rather than the reason not to.** `cloudflared` dials *out* to
+Cloudflare's edge, so nothing needs to be reachable at your address. Cloudflare
+then answers visitors on both IPv4 and IPv6, which means the app still works
+from a phone on an IPv4-only network. Nothing about the setup depends on your
+address being stable or routable.
+
+Compared with mirroring the Jellyfin approach — an AAAA record at your home
+IPv6, proxied — a tunnel avoids three real problems:
+
+| | Proxied AAAA | Tunnel |
+|---|---|---|
+| Address changes on reconnect | needs dynamic DNS to keep up | irrelevant, connection is outbound |
+| Inbound reachability | router firewall must allow the port | nothing inbound at all |
+| Port choice | Cloudflare proxies only certain ports, so you need 443 or an origin rule | any local port, `8787` is fine |
+| Home IP in public DNS | present in the record, hidden only by the proxy | never published |
+
+If you have never run one:
+
+```bash
+curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o /tmp/cloudflared.deb
+sudo dpkg -i /tmp/cloudflared.deb
+cloudflared tunnel login          # pick daksh.site in the browser
+cloudflared tunnel create home    # note the UUID it prints
+```
+
+Then write `~/.cloudflared/config.yml` from
+`server/cloudflared-config.example.yml`, and:
+
+```bash
+sudo cloudflared service install
+sudo systemctl enable --now cloudflared
+```
+
+If you already have one, back the config up first
+(`cp config.yml config.yml.bak-$(date +%F)`) and add to `ingress` **above**
+the `http_status:404` catch-all:
 
 ```yaml
-  - hostname: plate-api.yourdomain.com
+  - hostname: plate-api.daksh.site
     service: http://127.0.0.1:8787
 ```
 
 Then point DNS at the tunnel and restart it:
 
 ```bash
-cloudflared tunnel route dns <tunnel-name> plate-api.yourdomain.com
+cloudflared tunnel route dns <tunnel-name> plate-api.daksh.site
 sudo systemctl restart cloudflared
-curl https://plate-api.yourdomain.com/health
+curl https://plate-api.daksh.site/health
 ```
 
 `server/cloudflared-config.example.yml` shows the whole file if you would
@@ -120,7 +154,7 @@ rather compare.
 
 Open the site → **You** → **Sync**:
 
-- Server address: `https://plate-api.yourdomain.com`
+- Server address: `https://plate-api.daksh.site`
 - Token: the `PLATE_TOKEN` from `.env`
 
 **Test connection**, then **Save & sync**. Do the same on the phone. The
@@ -182,7 +216,7 @@ Manual restore, any time: **You → Export** writes the whole log as JSON, and
 
 The token is a single long secret over HTTPS, which is reasonable for a
 personal app. To do better, put **Cloudflare Access** in front of
-`plate-api.yourdomain.com` and require your Google login — same as you would
+`plate-api.daksh.site` and require your Google login — same as you would
 for Jellyfin. The app would then need an Access service token; ask and I will
 wire it in.
 

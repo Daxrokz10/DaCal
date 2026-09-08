@@ -13,9 +13,16 @@ here does not match what you find.
 ## What you are building
 
 A Node HTTP server on `127.0.0.1:8787` that stores one JSON document, reached
-from the internet only through the user's existing Cloudflare Tunnel. It holds
-the user's food and training log. Losing that data is the worst outcome
-available to you; treat `data/state.json` as precious.
+from the internet only through a Cloudflare Tunnel. It holds the user's food
+and training log. Losing that data is the worst outcome available to you;
+treat `data/state.json` as precious.
+
+**The machine is on an IPv6-only home connection.** This does not complicate
+anything, because `cloudflared` connects outbound — but it does rule out
+advice that assumes an inbound-reachable IPv4 address. Do not suggest port
+forwarding, dynamic DNS, or an A record pointing home. If `curl` to an
+IPv4-only host fails during setup, that is the network, not a bug you should
+chase.
 
 ---
 
@@ -25,9 +32,9 @@ Do not guess any of them. Stop and ask if you do not have them.
 
 | Needed | Looks like | Why |
 |---|---|---|
-| Site origin | `https://plate.yourdomain.com` | Goes in `PLATE_ORIGINS`. Must be the exact origin the app is served from — wrong value means the browser blocks every request and the user sees "not synced" with no clue why. |
-| API hostname | `plate-api.yourdomain.com` | The tunnel hostname you will route. Must not be one already in use. |
-| Tunnel name or UUID | from `cloudflared tunnel list` | The user already runs a tunnel for Jellyfin. Reuse it; do not create a second one without asking. |
+| Site origin | `https://plate.daksh.site` | Goes in `PLATE_ORIGINS`. Must be the exact origin the app is served from — wrong value means the browser blocks every request and the user sees "not synced" with no clue why. |
+| API hostname | `plate-api.daksh.site` | The tunnel hostname you will route. Must not be one already in use. |
+| Tunnel name or UUID | from `cloudflared tunnel list` | If a tunnel already exists, reuse it — do not create a second one without asking. **Do not assume one exists**: the user's other services may be plain proxied DNS records pointing at the home IP, in which case you are installing `cloudflared` for the first time. Check before you plan. |
 | Install location | default `/opt/plate` | Only if they want it elsewhere. |
 
 ---
@@ -72,7 +79,7 @@ If `/opt/plate` already contains the repo, `git pull` instead of cloning.
 
 ```bash
 chmod +x setup.sh backup.sh
-./setup.sh --origin https://plate.yourdomain.com
+./setup.sh --origin https://plate.daksh.site
 ```
 
 It is idempotent — re-running is safe and is the right response to most
@@ -90,17 +97,48 @@ around a failure by skipping the step.
 
 ### 3. Route the tunnel — the manual part
 
-The installer deliberately does not touch cloudflared. Find the config:
+The installer deliberately does not touch cloudflared.
+
+**First establish which situation you are in:**
 
 ```bash
+command -v cloudflared && cloudflared tunnel list
 ls -l ~/.cloudflared/config.yml /etc/cloudflared/config.yml 2>/dev/null
-cloudflared tunnel list
 ```
 
-Back it up, then add **above** the catch-all:
+*No cloudflared, or no tunnels* — this is a first-time install. Do this, and
+nothing in the "back up the config" advice below applies yet:
+
+```bash
+# install (amd64; use arm64 if uname -m says aarch64)
+curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o /tmp/cloudflared.deb
+sudo dpkg -i /tmp/cloudflared.deb
+
+cloudflared tunnel login            # opens a browser; user picks their domain
+cloudflared tunnel create home      # prints a UUID and writes a credentials json
+mkdir -p ~/.cloudflared
+```
+
+Write `~/.cloudflared/config.yml` using
+`cloudflared-config.example.yml` as the shape, with the real UUID and
+credentials path, then install it as a service:
+
+```bash
+sudo cloudflared service install
+sudo systemctl enable --now cloudflared
+```
+
+*A tunnel already exists* — you are editing something the user depends on.
+Back the config up first:
+
+```bash
+cp ~/.cloudflared/config.yml ~/.cloudflared/config.yml.bak-$(date +%F)
+```
+
+Then add **above** the catch-all:
 
 ```yaml
-  - hostname: plate-api.yourdomain.com
+  - hostname: plate-api.daksh.site
     service: http://127.0.0.1:8787
 ```
 
@@ -108,13 +146,13 @@ Validate before restarting anything:
 
 ```bash
 cloudflared tunnel ingress validate
-cloudflared tunnel ingress url https://plate-api.yourdomain.com   # should name the http://127.0.0.1:8787 rule
+cloudflared tunnel ingress url https://plate-api.daksh.site   # should name the http://127.0.0.1:8787 rule
 ```
 
 Then route DNS and restart:
 
 ```bash
-cloudflared tunnel route dns <tunnel-name> plate-api.yourdomain.com
+cloudflared tunnel route dns <tunnel-name> plate-api.daksh.site
 sudo systemctl restart cloudflared
 ```
 
@@ -124,7 +162,7 @@ Cloudflare dashboard that it points at this tunnel.
 ### 4. Verify from outside
 
 ```bash
-curl -fsS https://plate-api.yourdomain.com/health
+curl -fsS https://plate-api.daksh.site/health
 ```
 
 Expect `{"ok":true,"at":...}`. This is the acceptance test: until it passes,
@@ -134,7 +172,7 @@ the install is not done.
 
 Tell the user, in plain terms:
 
-- the API address: `https://plate-api.yourdomain.com`
+- the API address: `https://plate-api.daksh.site`
 - the token: `grep PLATE_TOKEN /opt/plate/server/.env`
 - that they enter both under **You → Sync** in the app, on each device, and
   press **Test connection** then **Save & sync**
@@ -154,13 +192,16 @@ Report the actual command output, not a claim that it passed.
 | Auth required | `curl -s -o /dev/null -w '%{http_code}' localhost:8787/state` | `401` |
 | Token works | `curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" localhost:8787/state` | `200` |
 | Not publicly bound | `ss -ltnp \| grep 8787` | `127.0.0.1:8787` only |
-| Public health | `curl -fsS https://plate-api.yourdomain.com/health` | `{"ok":true,...}` |
+| Public health | `curl -fsS https://plate-api.daksh.site/health` | `{"ok":true,...}` |
 | Env is private | `stat -c '%a' /opt/plate/server/.env` | `600` |
 | Backup scheduled | `crontab -l \| grep backup.sh` | one line |
 | Jellyfin still up | whatever its URL is | unchanged |
 
-That last one matters: you edited a shared tunnel config. Confirm you did not
-break the thing that was already working.
+That last one matters if the user runs other services. If you edited a shared
+tunnel config, confirm you did not break what was already working. If their
+other services are proxied DNS records rather than tunnel routes, your work
+did not touch them — say so rather than implying you checked something you
+did not.
 
 ---
 
@@ -171,7 +212,7 @@ break the thing that was already working.
 | `EADDRINUSE` on 8787 | something already on the port | `ss -ltnp \| grep 8787`; stop it or `./setup.sh --port 8788` and update the tunnel |
 | Service restarts in a loop | bad `.env`, or Node too old | `journalctl -u plate-sync -n 50 --no-pager` |
 | Public URL 502 | server down, or tunnel points at the wrong port | check `systemctl is-active plate-sync`, then the ingress entry |
-| Public URL 404 | ingress rule is below the catch-all, or hostname typo | `cloudflared tunnel ingress url https://plate-api.yourdomain.com` |
+| Public URL 404 | ingress rule is below the catch-all, or hostname typo | `cloudflared tunnel ingress url https://plate-api.daksh.site` |
 | App says "not synced", server healthy | `PLATE_ORIGINS` does not match the site origin exactly | compare with the browser address bar; no trailing slash; re-run setup with the right `--origin` |
 | App says "token rejected" | token mismatch | `grep PLATE_TOKEN .env` and re-enter it in the app |
 | Sync works on wifi, not on mobile data | the user is reaching the site but not the API, or DNS has not propagated | `curl` the health URL from the phone's browser |
